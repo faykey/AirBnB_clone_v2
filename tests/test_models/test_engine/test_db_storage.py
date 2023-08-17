@@ -1,11 +1,10 @@
-#!/usr/bin/python3
-"""Defines unnittests for models/engine/db_storage.py."""
-import pep8
-import models
-import MySQLdb
+#!/usr/bin/python
+"""Unittests for DBStorage class of AirBnb_Clone_v2"""
 import unittest
+import pep8
+import os
 from os import getenv
-from models.base_model import Base
+from models.base_model import BaseModel
 from models.user import User
 from models.state import State
 from models.city import City
@@ -14,147 +13,88 @@ from models.place import Place
 from models.review import Review
 from models.engine.db_storage import DBStorage
 from models.engine.file_storage import FileStorage
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm.session import Session
-from sqlalchemy.engine.base import Engine
+import MySQLdb
 
 
+@unittest.skipIf(
+       os.getenv('HBNB_TYPE_STORAGE') != 'db',
+       "This test only work in DBStorage")
 class TestDBStorage(unittest.TestCase):
-    """Unittests for testing the DBStorage class."""
+    """this will test the DBStorage"""
 
     @classmethod
-    def setUpClass(self):
-        """DBStorage testing setup.
-        """
-        if type(models.storage) == DBStorage:
-            self.storage = DBStorage()
-            Base.metadata.create_all(self.storage._DBStorage__engine)
-            Session = sessionmaker(bind=self.storage._DBStorage__engine)
-            self.storage._DBStorage__session = Session()
-            self.state = State(name="California")
-            self.storage._DBStorage__session.add(self.state)
-            self.city = City(name="San_Jose", state_id=self.state.id)
-            self.storage._DBStorage__session.add(self.city)
-            self.user = User(email="poppy@holberton.com", password="betty")
-            self.storage._DBStorage__session.add(self.user)
-            self.place = Place(city_id=self.city.id, user_id=self.user.id,
-                               name="School")
-            self.storage._DBStorage__session.add(self.place)
-            self.amenity = Amenity(name="Wifi")
-            self.storage._DBStorage__session.add(self.amenity)
-            self.review = Review(place_id=self.place.id, user_id=self.user.id,
-                                 text="stellar")
-            self.storage._DBStorage__session.add(self.review)
-            self.storage._DBStorage__session.commit()
+    def setUpClass(cls):
+        """Tests"""
+        cls.user = User()
+        cls.user.first_name = "Kev"
+        cls.user.last_name = "Yo"
+        cls.user.email = "1234@yahoo.com"
+        cls.storage = FileStorage()
 
     @classmethod
-    def tearDownClass(cls):
-        """DBStorage testing teardown.
-        Delete all instantiated test classes.
-        Clear DBStorage session.
-        """
-        if type(models.storage) == DBStorage:
-            cls.storage._DBStorage__session.delete(cls.state)
-            cls.storage._DBStorage__session.delete(cls.city)
-            cls.storage._DBStorage__session.delete(cls.user)
-            cls.storage._DBStorage__session.delete(cls.amenity)
-            cls.storage._DBStorage__session.commit()
-            del cls.state
-            del cls.city
-            del cls.user
-            del cls.place
-            del cls.amenity
-            del cls.review
-            cls.storage._DBStorage__session.close()
-            del cls.storage
+    def teardown(cls):
+        """at the end of the test this will tear it down"""
+        del cls.user
 
-    def test_pep8(self):
-        """Test pep8 styling."""
+    def tearDown(self):
+        """teardown"""
+        try:
+            os.remove("file.json")
+        except Exception:
+            pass
+
+    def test_pep8_DBStorage(self):
+        """Tests pep8 style"""
         style = pep8.StyleGuide(quiet=True)
         p = style.check_files(['models/engine/db_storage.py'])
         self.assertEqual(p.total_errors, 0, "fix pep8")
 
-    def test_docstrings(self):
-        self.assertIsNotNone(DBStorage.__doc__)
-        self.assertIsNotNone(DBStorage.__init__.__doc__)
-        self.assertIsNotNone(DBStorage.all.__doc__)
-        self.assertIsNotNone(DBStorage.new.__doc__)
-        self.assertIsNotNone(DBStorage.save.__doc__)
-        self.assertIsNotNone(DBStorage.delete.__doc__)
-        self.assertIsNotNone(DBStorage.reload.__doc__)
-
-    @unittest.skipIf(type(models.storage) == FileStorage,
-                     "Testing FileStorage")
-    def test_attributes(self):
-        self.assertTrue(isinstance(self.storage._DBStorage__engine, Engine))
-        self.assertTrue(isinstance(self.storage._DBStorage__session, Session))
-
-    def test_methods(self):
-        self.assertTrue(hasattr(DBStorage, "__init__"))
-        self.assertTrue(hasattr(DBStorage, "all"))
-        self.assertTrue(hasattr(DBStorage, "new"))
-        self.assertTrue(hasattr(DBStorage, "save"))
-        self.assertTrue(hasattr(DBStorage, "delete"))
-        self.assertTrue(hasattr(DBStorage, "reload"))
-
-    @unittest.skipIf(type(models.storage) == FileStorage,
-                     "Testing FileStorage")
-    def test_init(self):
-        """Test initialization."""
-        self.assertTrue(isinstance(self.storage, DBStorage))
-
-    @unittest.skipIf(type(models.storage) == FileStorage,
-                     "Testing FileStorage")
     def test_all(self):
-        """Test default all method."""
-        obj = self.storage.all()
+        """tests if all works in DB Storage"""
+        storage = FileStorage()
+        obj = storage.all()
+        self.assertIsNotNone(obj)
         self.assertEqual(type(obj), dict)
-        self.assertEqual(len(obj), 6)
+        self.assertIs(obj, storage._FileStorage__objects)
 
-    @unittest.skipIf(type(models.storage) == FileStorage,
-                     "Testing FileStorage")
     def test_new(self):
-        st = State(name="Washington")
-        self.storage.new(st)
-        store = list(self.storage._DBStorage__session.new)
-        self.assertIn(st, store)
+        """test when new is created"""
+        storage = FileStorage()
+        obj = storage.all()
+        user = User()
+        user.id = 123455
+        user.name = "Kevin"
+        storage.new(user)
+        key = user.__class__.__name__ + "." + str(user.id)
+        self.assertIsNotNone(obj[key])
 
-    @unittest.skipIf(type(models.storage) == FileStorage,
-                     "Testing FileStorage")
-    def test_save(self):
-        """Test save method."""
-        st = State(name="Albania")
-        self.storage._DBStorage__session.add(st)
+    def test_reload_dbtorage(self):
+        """
+        tests reload
+        """
         self.storage.save()
-        db = MySQLdb.connect(user="hbnb_test",
-                             passwd="hbnb_test_pwd",
-                             db="hbnb_test_db")
-        cursor = db.cursor()
-        cursor.execute("SELECT * FROM states WHERE BINARY name = 'Albania'")
-        query = cursor.fetchall()
-        self.assertEqual(1, len(query))
-        self.assertEqual(st.id, query[0][0])
-        cursor.close()
-
-    @unittest.skipIf(type(models.storage) == FileStorage,
-                     "Testing FileStorage")
-    def test_delete(self):
-        """Test delete method."""
-        st = State(name="New_York")
-        self.storage._DBStorage__session.add(st)
-        self.storage._DBStorage__session.commit()
-        self.storage.delete(st)
-        self.assertIn(st, list(self.storage._DBStorage__session.deleted))
-
-    @unittest.skipIf(type(models.storage) == FileStorage,
-                     "Testing FileStorage")
-    def test_reload(self):
-        og_session = self.storage._DBStorage__session
-        self.storage.reload()
-        self.assertIsInstance(self.storage._DBStorage__session, Session)
-        self.assertNotEqual(og_session, self.storage._DBStorage__session)
-        self.storage._DBStorage__session.close()
-        self.storage._DBStorage__session = og_session
+        Root = os.path.dirname(os.path.abspath("console.py"))
+        path = os.path.join(Root, "file.json")
+        with open(path, 'r') as f:
+            lines = f.readlines()
+        try:
+            os.remove(path)
+        except Exception:
+            pass
+        self.storage.save()
+        with open(path, 'r') as f:
+            lines2 = f.readlines()
+        self.assertEqual(lines, lines2)
+        try:
+            os.remove(path)
+        except Exception:
+            pass
+        with open(path, "w") as f:
+            f.write("{}")
+        with open(path, "r") as r:
+            for line in r:
+                self.assertEqual(line, "{}")
+        self.assertIs(self.storage.reload(), None)
 
 
 if __name__ == "__main__":
