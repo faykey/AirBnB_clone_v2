@@ -1,21 +1,22 @@
 #!/usr/bin/python3
-"""Starts a Flask web application
-"""
+"""This starts a Flask web Application listening on 0.0.0.0, port 5000."""
+
 from flask import Flask
 
-if __name__ == '__main__':
-        app = Flask(__name__)
+app = Flask(__name__)
 
-            @app.route('/', strict_slashes=False)
-                def index():
-                        """Display 'Hello HBNB!'
-                                """
-                                        return 'Hello HBNB!'
 
-                                        @app.route('/hbnb', strict_slashes=False)
-                                            def hbnb():
-                                                    """Display 'HBNB'
-                                                            """
-                                                                    return 'HBNB'
+@app.route('/', strict_slashes=False)
+def hello_hbnb():
+        """Will display 'Hello HBNB'"""
+            return "Hello HBNB!"
 
-                                                                    app.run('0.0.0.0')
+
+        @app.route('/hbnb', strict_slashes=False)
+        def hbnb():
+                """Will display 'HBNB'"""
+                    return "HBNB"
+
+
+                if __name__ == '__main__':
+                        app.run(host='0.0.0.0')
