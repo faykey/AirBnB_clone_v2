@@ -8,6 +8,7 @@ Routes:
                 """
 from flask import Flask
 
+<<<<<<< HEAD
                 app = Flask(__name__)
 
 
@@ -32,3 +33,29 @@ from flask import Flask
 
                                             if __name__ == '__main__':
                                                     app.run(host='0.0.0.0')
+=======
+if __name__ == '__main__':
+    app = Flask(__name__)
+
+    @app.route('/', strict_slashes=False)
+    def index():
+        """Display 'Hello HBNB!'
+        """
+        return 'Hello HBNB!'
+
+    @app.route('/hbnb', strict_slashes=False)
+    def hbnb():
+        """Display 'HBNB'
+        """
+        return 'HBNB'
+
+    @app.route('/c/<text>', strict_slashes=False)
+    def c(text):
+        """Display “C ” followed by the value of
+        the text variable (replace underscore _
+        symbols with a space)
+        """
+        return 'C ' + text.replace('_', ' ')
+
+    app.run('0.0.0.0')
+>>>>>>> 5ceb222ad8f99cf53c3c294f6a03577a774defbb
