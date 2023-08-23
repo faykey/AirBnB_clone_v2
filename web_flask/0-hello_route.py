@@ -1,5 +1,6 @@
 #!/usr/bin/python3
-"""This starts a Flask web Application listening on 0.0.0.0, port 5000."""
+"""This starts a Flask web Application, listening on 0.0.0.0,
+port 5000 """
 
 from flask import Flask
 
@@ -10,12 +11,6 @@ app = Flask(__name__)
 def hello_hbnb():
     """Will display 'Hello HBNB'"""
     return "Hello HBNB!"
-
-
-@app.route('/hbnb', strict_slashes=False)
-def hbnb():
-    """Will display 'HBNB'"""
-    return "HBNB"
 
 
 if __name__ == '__main__':
